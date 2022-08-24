@@ -20,7 +20,6 @@ namespace JSON
     }
     Value parseValue(const std::string &str, size_t &i)
     {
-
         Value value;
         skipBlank(str, i);
         if (str[i] == '{')
@@ -225,24 +224,20 @@ namespace JSON
         }
     }
 
-    String add_indent(const String &lines, unsigned int indent = 0)
+    String addIndent(const std::string &s, unsigned int indent = 0)
     {
-        std::stringstream ss;
-        const char *token = "\r\n";
-        char *copy = new char(strlen(lines.c_str()));
-        strcpy(copy, lines.c_str());
-        char *p = strtok(copy, token);
-        while (p)
+        std::stringstream input, output;
+        input.str(s);
+        std::string item;
+        while (std::getline(input, item))
         {
             for (unsigned int i = 0; i < indent; i++)
-                ss << ' ';
-            ss << p;
-            ss << '\n';
-            p = strtok(NULL, token);
+                output << ' ';
+            output << item << '\n';
         }
-        auto rst = ss.str();
-        rst.erase(rst.length() - 1, 1);
-        return rst;
+        std::string out_str = output.str();
+        out_str.erase(out_str.length() - 1, 1);
+        return out_str;
     }
 
     String stringifyArray(const Array &value, unsigned int indent)
@@ -254,7 +249,7 @@ namespace JSON
             if (indent)
             {
                 rst.append("\n");
-                lines = add_indent(lines, indent);
+                lines = addIndent(lines, indent);
             }
             rst.append(lines);
             rst.append(",");
@@ -269,13 +264,13 @@ namespace JSON
         String rst = "{";
         for (auto item : value)
         {
-            auto lines = joinToString(stringifyString(item.first), indent ? ": " : ":", stringify(item.second, indent));
-            if (indent)
+            auto kv_string = joinToString(stringifyString(item.first), indent ? ": " : ":", stringify(item.second, indent));
+            if (indent > 0)
             {
                 rst.append("\n");
-                lines = add_indent(lines, indent);
+                kv_string = addIndent(kv_string, indent);
             }
-            rst.append(lines);
+            rst.append(kv_string);
             rst.append(",");
         }
         rst.erase(rst.length() - 1, 1);

@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cstddef>
 #include <utility>
+#include <stdexcept>
 
 namespace JSON
 {
@@ -30,129 +31,118 @@ namespace JSON
         using Null = std::nullptr_t;
         using Array = std::vector<Value>;
         using Object = std::map<std::string, Value>;
-        union ValueUnion
-        {
-            String *string;
-            Number *number;
-            Boolean *boolean;
-            Null *null;
-            Array *array;
-            Object *object;
-        };
         Type type = Type::null;
-        ValueUnion data;
+
+        String data_string;
+        Array data_array;
+        Object data_object;
+        Number data_number = 0;
+        Boolean data_boolean = false;
+        Null data_null = nullptr;
 
     public:
-        Value()
-        {
-            type = Type::null;
-            data.null = nullptr;
-        };
+        explicit Value(){};
         explicit Value(const char *_string) { setString(_string); };
-        explicit Value(String _string) { setString(std::move(_string)); };
-        explicit Value(Number _number) { setNumber(std::move(_number)); };
-        explicit Value(Boolean _boolean) { setBoolean(std::move(_boolean)); };
-        explicit Value(Null _null) { setNull(std::move(_null)); };
-        explicit Value(Array _array) { setArray(std::move(_array)); };
-        explicit Value(Object _object) { setObject(std::move(_object)); };
+        explicit Value(String &&_string) { setString(std::move(_string)); };
+        explicit Value(Number &&_number) { setNumber(std::move(_number)); };
+        explicit Value(Boolean &&_boolean) { setBoolean(std::move(_boolean)); };
+        explicit Value(Null &&_null) { setNull(std::move(_null)); };
+        explicit Value(Array &&_array) { setArray(std::move(_array)); };
+        explicit Value(Object &&_object) { setObject(std::move(_object)); };
 
         // getters
-        inline String getString() const { return *data.string; }
-        inline Number getNumber() const { return *data.number; }
-        inline Boolean getBoolean() const { return *data.boolean; }
-        inline Null getNull() const { return *data.null; }
-        inline Array getArray() const { return *data.array; }
-        inline Object getObject() const { return *data.object; }
+        inline Number getNumber() const { return data_number; }
+        inline Boolean getBoolean() const { return data_boolean; }
+        inline Null getNull() const { return data_null; }
+        inline String getString() const { return data_string; }
+        inline Array getArray() const { return data_array; }
+        inline Object getObject() const { return data_object; }
 
         // setters
         inline void setString(const char *_string)
         {
-            this->data.string = new String(_string);
-            this->type = Type::string;
+            data_string = String(_string);
+            type = Type::string;
         }
         inline void setString(String &&_string)
         {
-            this->data.string = new String(_string);
-            this->type = Type::string;
+            data_string = _string;
+            type = Type::string;
         }
         inline void setNumber(Number &&_number)
         {
-            this->data.number = new Number(_number);
-            this->type = Type::number;
+
+            data_number = _number;
+            type = Type::number;
         }
         inline void setBoolean(Boolean &&_boolean)
         {
-            this->data.boolean = new Boolean(_boolean);
-            this->type = Type::boolean;
+            data_boolean = _boolean;
+            type = Type::boolean;
         }
         inline void setNull(Null &&_null)
         {
-            this->data.null = new Null(_null);
-            this->type = Type::null;
+            data_null = _null;
+            type = Type::null;
         }
         inline void setArray(Array &&_array)
         {
-            this->data.array = new Array(_array);
-            this->type = Type::array;
+            data_array = _array;
+            type = Type::array;
         }
         inline void setObject(Object &&_object)
         {
-            this->data.object = new Object(_object);
-            this->type = Type::object;
+            data_object = _object;
+            type = Type::object;
         }
 
         // type
-        inline Type getType() const { return this->type; }
+        inline Type getType() const { return type; }
         inline std::string getTypeString()
         {
-            switch (this->type)
+            switch (type)
             {
-            case Type::string:
-                return "string";
             case Type::number:
                 return "number";
             case Type::boolean:
                 return "boolean";
             case Type::null:
                 return "null";
+            case Type::string:
+                return "string";
             case Type::array:
                 return "array";
             case Type::object:
                 return "object";
             default:
-                return "null";
+                throw std::runtime_error("The JSON library does not run normally");
             }
         }
-
         // free memory
-        void free()
+        void clear()
         {
             switch (type)
             {
             case Type::string:
-                delete (data.string);
-            case Type::number:
-                delete (data.number);
-            case Type::boolean:
-                delete (data.boolean);
-            case Type::null:
-                delete (data.null);
+                data_string.clear();
+                break;
             case Type::array:
-                delete (data.array);
+                data_array.clear();
+                break;
             case Type::object:
-                delete (data.object);
-
-                setNull(nullptr);
+                data_object.clear();
+                break;
             }
-        };
+        }
     };
 
+    // Type bindings
     using Number = double;
-    using String = std::string;
-    using Object = std::map<std::string, Value>;
-    using Array = std::vector<Value>;
-    using Null = std::nullptr_t;
     using Boolean = bool;
+    using Null = std::nullptr_t;
+    using String = std::string;
+    using Array = std::vector<Value>;
+    using Object = std::map<std::string, Value>;
 
     // ! JSON::parse
     Value parse(const std::string &str);
@@ -167,7 +157,7 @@ namespace JSON
     Array parseArray(const std::string &str, size_t &i);
     // ! JSON::stringify
     String stringify(const Value &value, unsigned int indent = 0);
-    String replace_all_distinct(const String &str, const String &old_value, const String &new_value)
+    String replaceAllDistinct(const String &str, const String &old_value, const String &new_value)
     {
         auto cloned = std::string(str);
         for (String::size_type pos(0); pos != String::npos; pos += new_value.length())
@@ -182,18 +172,19 @@ namespace JSON
     inline String stringifyBoolean(const Boolean &value) { return value ? "true" : "false"; }
     inline String stringifyNull(const Null &value) { return "null"; }
     inline String stringifyNumber(const Number &value) { return std::to_string(value); }
-    inline String stringifyString(const String &value) { return "\"" + replace_all_distinct(value, "\"", "\\\"") + "\""; }
+    inline String stringifyString(const String &value) { return "\"" + replaceAllDistinct(value, "\"", "\\\"") + "\""; }
 
-    // utils
+    // Utils
     std::string joinToString() { return ""; }
-    std::string joinToString(std::string val) { return val; }
+    std::string joinToString(const std::string &val) { return val; }
     template <typename T, typename... Ts>
-    std::string joinToString(T arg1, Ts... arg_left)
+    std::string joinToString(const T &arg1, const Ts &...arg_left)
     {
         std::stringstream ss;
         ss << arg1 << joinToString(arg_left...);
         return ss.str();
     }
+    // Error class
     class SyntaxError : std::exception
     {
         std::string _reason;
@@ -205,4 +196,5 @@ namespace JSON
             return _reason.c_str();
         }
     };
+
 }

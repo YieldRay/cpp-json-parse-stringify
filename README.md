@@ -27,6 +27,19 @@ std::string JSON::stringify(JSON::Value value, unsigned int indent = 0);
 ```cpp
 JSON::Value value = JSON::Value(123.4);
 JSON::Value value = JSON::Value("string");
-JSON::Value value = JSON::Value(makr);
-
+JSON::Value value = JSON::Value({
+    {"hello", JSON::Value("world")},
+    {"key", JSON::Value("value")},
+    {"abc", JSON::Value(12.3)}
+});
+JSON::Value value = JSON::Value({JSON::Value(true), JSON::Value("abc"), JSON::Value(JSON::Array{JSON::Value(12.3)})});
+// 通过字符串解析 JSON 值对象
+JSON::Value value = JSON::parse("[{\"abc\":123}]");
+// 格式化为文本，4 空格缩进
+cout << JSON::Stringify(value, 4);
+// 获取 JSON 值对象中的数据类型
+cout << value.getTypeString();
+if(value.getType() == JSON::Type::number) {/**/}
+// 获取 JSON 值对象中的数据
+cout << value.getNumber();
 ```
