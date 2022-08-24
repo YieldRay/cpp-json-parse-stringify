@@ -3,7 +3,7 @@
 namespace JSON
 {
 
-    Value parse(std::string str)
+    Value parse(const std::string &str)
     {
         size_t i = 0;
         auto rst = parseValue(str, i);
@@ -13,12 +13,12 @@ namespace JSON
         return rst;
     };
 
-    void skipBlank(std::string &str, size_t &i)
+    void skipBlank(const std::string &str, size_t &i)
     {
         while (str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t')
             i++;
     }
-    Value parseValue(std::string &str, size_t &i)
+    Value parseValue(const std::string &str, size_t &i)
     {
 
         Value value;
@@ -41,9 +41,9 @@ namespace JSON
             throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
         return value;
     }
-    String *parseString(std::string &str, size_t &i)
+    String parseString(const std::string &str, size_t &i)
     {
-        String *result = new std::string("");
+        String result;
         i++; // skip left colon
         while (str[i] != '"')
         {
@@ -55,28 +55,28 @@ namespace JSON
                 switch (str[i])
                 {
                 case '"':
-                    (*result) += '"';
+                    result += '"';
                     break;
                 case '\\':
-                    (*result) += "\\";
+                    result += "\\";
                     break;
                 case '/':
-                    (*result) += "/";
+                    result += "/";
                     break;
                 case 'b':
-                    (*result) += "\b";
+                    result += "\b";
                     break;
                 case 'f':
-                    (*result) += "\f";
+                    result += "\f";
                     break;
                 case 'n':
-                    (*result) += "\n";
+                    result += "\n";
                     break;
                 case 'r':
-                    (*result) += "\r";
+                    result += "\r";
                     break;
                 case 't':
-                    (*result) += "\t";
+                    result += "\t";
                     break;
                 case 'u':
                     // TODO
@@ -89,14 +89,15 @@ namespace JSON
             }
             else
             {
-                (*result) += str[i];
+                result += str[i];
                 i++;
             }
         }
         i++; // skip right colon
         return result;
     }
-    Number *parseNumber(std::string &str, size_t &i)
+
+    Number parseNumber(const std::string &str, size_t &i)
     {
         // TODO: support e/E
         std::string numStr = "";
@@ -129,12 +130,10 @@ namespace JSON
                 i++;
             }
         }
-
-        Number *val = new Number;
-        *val = std::stod(numStr);
-        return val;
+        return std::stod(numStr);
     }
-    Null *parseNull(std::string &str, size_t &i)
+
+    Null parseNull(const std::string &str, size_t &i)
     {
         if (str.substr(i, 4) == "null")
         {
@@ -143,77 +142,69 @@ namespace JSON
         }
         throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
     }
-    Boolean *parseTrue(std::string &str, size_t &i)
+
+    Boolean parseTrue(const std::string &str, size_t &i)
     {
         if (str.substr(i, 4) == "true")
         {
             i += 4;
-            return new Boolean(true);
+            return (true);
         }
         throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
     }
-    Boolean *parseFalse(std::string &str, size_t &i)
+
+    Boolean parseFalse(const std::string &str, size_t &i)
     {
         if (str.substr(i, 5) == "false")
         {
             i += 5;
-            return new Boolean(false);
+            return (false);
         }
         throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
     }
-    Object *parseObject(std::string &str, size_t &i)
+
+    Object parseObject(const std::string &str, size_t &i)
     {
         i++; // skip '{'
-        Object *result = new Object();
+        Object result;
         while (str[i] != '}')
         {
             skipBlank(str, i); // skip blank to find key
-            std::string key = *parseString(str, i);
+            std::string key = parseString(str, i);
             skipBlank(str, i); // skip blank to find colon
             if (str[i] == ':')
-            {
                 i++;
-            }
             else
-            {
                 throw SyntaxError(joinToString("Expect ':' at ", i, " but found ", str[i]));
-            }
             auto value = parseValue(str, i);
-            (*result)[key] = value;
+            auto entry = std::make_pair<String, Value>(std::move(key), std::move(value));
+            result.insert(std::move(entry));
             skipBlank(str, i);
             if (str[i] == ',')
-            {
                 i++; // skip sep_comma
-            }
             else
-            {
                 skipBlank(str, i); // skip blank to find '}'
-            }
         }
         i++; // skip '}'
         return result;
     }
-    Array *parseArray(std::string &str, size_t &i)
+    Array parseArray(const std::string &str, size_t &i)
     {
         i++;
-        Array *result = new Array();
+        Array result;
         while (str[i] != ']')
         {
-            result->push_back(parseValue(str, i));
+            result.push_back(parseValue(str, i));
             if (str[i] == ',')
-            {
                 i++; // skip sep_comma
-            }
             else
-            {
                 skipBlank(str, i); // skip blank to find ']'
-            }
         }
         i++; // skip ']'
         return result;
     }
 
-    String stringify(Value value, unsigned int indent)
+    String stringify(const Value &value, unsigned int indent)
     {
         switch (value.getType())
         {
@@ -234,7 +225,7 @@ namespace JSON
         }
     }
 
-    String add_indent(String lines, unsigned int indent = 0)
+    String add_indent(const String &lines, unsigned int indent = 0)
     {
         std::stringstream ss;
         const char *token = "\r\n";
@@ -254,7 +245,7 @@ namespace JSON
         return rst;
     }
 
-    String stringifyArray(Array value, unsigned int indent)
+    String stringifyArray(const Array &value, unsigned int indent)
     {
         String rst = "[";
         for (auto item : value)
@@ -273,7 +264,7 @@ namespace JSON
         return rst;
     }
 
-    String stringifyObject(Object value, unsigned int indent)
+    String stringifyObject(const Object &value, unsigned int indent)
     {
         String rst = "{";
         for (auto item : value)
