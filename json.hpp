@@ -45,7 +45,7 @@ namespace JSON
         using Array = std::vector<Value>;
         using Object = std::map<std::string, Value>;
         Type type = Type::null;
-
+        // init data
         String data_string;
         Array data_array;
         Object data_object;
@@ -102,46 +102,45 @@ namespace JSON
         }
 
         // setters
-        inline void setString(const char *_string)
+        inline void setString(const char *_string) noexcept
         {
             data_string = String(_string);
             type = Type::string;
         }
-        inline void setString(String &&_string)
+        inline void setString(String &&_string) noexcept
         {
             data_string = _string;
             type = Type::string;
         }
-        inline void setNumber(Number &&_number)
+        inline void setNumber(Number &&_number) noexcept
         {
-
             data_number = _number;
             type = Type::number;
         }
-        inline void setBoolean(Boolean &&_boolean)
+        inline void setBoolean(Boolean &&_boolean) noexcept
         {
             data_boolean = _boolean;
             type = Type::boolean;
         }
-        inline void setNull(Null &&_null)
+        inline void setNull(Null &&_null) noexcept
         {
             data_null = _null;
             type = Type::null;
         }
-        inline void setArray(Array &&_array)
+        inline void setArray(Array &&_array) noexcept
         {
             data_array = _array;
             type = Type::array;
         }
-        inline void setObject(Object &&_object)
+        inline void setObject(Object &&_object) noexcept
         {
             data_object = _object;
             type = Type::object;
         }
 
         // type
-        inline Type getType() const { return type; }
-        inline std::string getTypeString()
+        inline Type getType() const noexcept { return type; }
+        inline std::string getTypeString() const noexcept
         {
             switch (type)
             {
@@ -162,7 +161,7 @@ namespace JSON
             }
         }
         // free memory
-        void clear()
+        void clear() noexcept
         {
             switch (type)
             {
@@ -176,6 +175,7 @@ namespace JSON
                 data_object.clear();
                 break;
             }
+            setNull(nullptr);
         }
     };
 
@@ -218,10 +218,10 @@ namespace JSON
     inline String stringifyString(const String &value) { return "\"" + replaceAllDistinct(value, "\"", "\\\"") + "\""; }
 
     // Utils
-    std::string joinToString() { return ""; }
-    std::string joinToString(const std::string &val) { return val; }
+    inline std::string joinToString() { return ""; }
+    inline std::string joinToString(const std::string &val) { return val; }
     template <typename T, typename... Ts>
-    std::string joinToString(const T &arg1, const Ts &...arg_left)
+    inline std::string joinToString(const T &arg1, const Ts &...arg_left)
     {
         std::stringstream ss;
         ss << arg1 << joinToString(arg_left...);
