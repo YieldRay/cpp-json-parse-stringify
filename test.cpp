@@ -5,7 +5,9 @@ int main()
 {
     try
     {
-        JSON::Value arr = JSON::parse("[\"wow\", {\"abc\":123}]");
+        JSON::Value arr = JSON::parse(R"JSON(
+            ["wow", {"abc":123}]
+        )JSON");
         arr.getArray().push_back(JSON::Value(789.0));       // this has no effect to the real vector, it just push data to a copy
         cout << (arr.getArray()[0].getString()) << endl;    // wow
         cout << JSON::stringify(arr.getArray()[0]) << endl; // "wow"
@@ -16,7 +18,12 @@ int main()
         cout << num.getTypeString() << endl;  // number
         cout << JSON::stringify(num) << endl; // 123.400000
 
-        auto obj = JSON::parse("{\"a\":1,\"b\":{\"c\":3}}");
+        auto obj = JSON::parse(R"JSON(
+            {
+                "a": 1,
+                "b": { "c": 3 }
+             }
+        )JSON");
         cout << obj.getTypeString() << endl;              // object
         cout << obj.getObject()["a"].getNumber() << endl; // 1
         // obj.getObject().insert(std::make_pair(JSON::String("123"), JSON::Value(123.0))); // constructors are explicit, so use double rather than int
