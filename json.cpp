@@ -20,6 +20,8 @@ namespace JSON
     }
     Value parseValue(const std::string &str, size_t &i)
     {
+        if (i >= str.length())
+            throw SyntaxError("Unexpected end of JSON input");
         Value value;
         skipBlank(str, i);
         if (str[i] == '{')
@@ -34,7 +36,7 @@ namespace JSON
             value.setBoolean(parseFalse(str, i));
         else if (str[i] == '"')
             value.setString(parseString(str, i));
-        else if ((str[i] >= '0' && str[i] <= '9') || str[i] == '-')
+        else if (isdigit(str[i]) || str[i] == '-')
             value.setNumber(parseNumber(str, i));
         else
             throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
@@ -79,7 +81,7 @@ namespace JSON
                     break;
                 case 'u':
                     // TODO
-                    throw SyntaxError("Unimplemented yet");
+                    throw SyntaxError("Unicode is unimplemented yet");
 
                 default:
                     throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
@@ -98,37 +100,53 @@ namespace JSON
 
     Number parseNumber(const std::string &str, size_t &i)
     {
-        // TODO: support e/E
         std::string numStr = "";
         if (str[i] == '-')
         {
             numStr += '-';
             i++;
         }
-        while (isalnum(str[i]))
+        while (isdigit(str[i]))
         {
             numStr += str[i];
             i++;
         }
-        if (str[i] == 'e' || str[i] == 'E')
-        {
-            // TODO
-            throw SyntaxError("Unimplemented yet");
-        }
-        if (str[i] == '.')
+        if (str[i] == '.') // push '.' and push rest number
         {
             numStr += '.';
             i++;
-            if (!isalnum(str[i]))
-            {
+            if (i >= str.length())
+                throw SyntaxError("Unexpected end of JSON input");
+            if (!isdigit(str[i]))
                 throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
-            }
-            while (isalnum(str[i]))
+            while (isdigit(str[i]))
             {
                 numStr += str[i];
                 i++;
             }
         }
+        if (str[i] == 'e' || str[i] == 'E') // parse Scientific notation
+        {
+            numStr += 'e';
+            i++; // skip e/E
+            if (i >= str.length())
+                throw SyntaxError("Unexpected end of JSON input");
+            if (str[i] == '-' || str[i] == '+')
+            {
+                numStr += str[i];
+                i++;
+            }
+            if (i >= str.length())
+                throw SyntaxError("Unexpected end of JSON input");
+            if (!isdigit(str[i]))
+                throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
+            while (isdigit(str[i]))
+            {
+                numStr += str[i];
+                i++;
+            }
+        }
+
         return std::stod(numStr);
     }
 

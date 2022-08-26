@@ -5,6 +5,9 @@ int main()
 {
     try
     {
+        cout << JSON::parse("-9.9E+9").getNumber() << endl;
+        cout << JSON::parse("-9.9E-9").getNumber() << endl;
+
         JSON::Value arr = JSON::parse(R"JSON(
             ["wow", {"abc":123}]
         )JSON");

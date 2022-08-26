@@ -11,6 +11,19 @@
 
 namespace JSON
 {
+    // Error class
+    class TypeError : public std::runtime_error
+    {
+        using std::runtime_error::runtime_error;
+    };
+
+    class SyntaxError : public std::runtime_error
+    {
+    public:
+        using _Mybase = runtime_error;
+        explicit SyntaxError(const std::string &_Message) : _Mybase(_Message.c_str()) {}
+        explicit SyntaxError(const char *_Message) : _Mybase(_Message) {}
+    };
 
     enum Type
     {
@@ -51,12 +64,42 @@ namespace JSON
         explicit Value(Object &&_object) { setObject(std::move(_object)); };
 
         // getters
-        inline Number getNumber() const { return data_number; }
-        inline Boolean getBoolean() const { return data_boolean; }
-        inline Null getNull() const { return data_null; }
-        inline String getString() const { return data_string; }
-        inline Array getArray() const { return data_array; }
-        inline Object getObject() const { return data_object; }
+        inline Number getNumber() const
+        {
+            if (type != Type::number)
+                throw TypeError("Expect number, got " + getType());
+            return data_number;
+        }
+        inline Boolean getBoolean() const
+        {
+            if (type != Type::boolean)
+                throw TypeError("Expect boolean, got " + getType());
+            return data_boolean;
+        }
+        inline Null getNull() const
+        {
+            if (type != Type::null)
+                throw TypeError("Expect null, got " + getType());
+            return data_null;
+        }
+        inline String getString() const
+        {
+            if (type != Type::string)
+                throw TypeError("Expect string, got " + getType());
+            return data_string;
+        }
+        inline Array getArray() const
+        {
+            if (type != Type::array)
+                throw TypeError("Expect array, got " + getType());
+            return data_array;
+        }
+        inline Object getObject() const
+        {
+            if (type != Type::object)
+                throw TypeError("Expect object, got " + getType());
+            return data_object;
+        }
 
         // setters
         inline void setString(const char *_string)
@@ -115,7 +158,7 @@ namespace JSON
             case Type::object:
                 return "object";
             default:
-                throw std::runtime_error("The JSON library does not run normally");
+                throw TypeError("The JSON library does not run normally");
             }
         }
         // free memory
@@ -184,17 +227,4 @@ namespace JSON
         ss << arg1 << joinToString(arg_left...);
         return ss.str();
     }
-    // Error class
-    class SyntaxError : std::exception
-    {
-        std::string _reason;
-
-    public:
-        SyntaxError(std::string reason) : _reason(reason) {}
-        const char *what() const throw()
-        {
-            return _reason.c_str();
-        }
-    };
-
 }
