@@ -27,10 +27,10 @@ namespace JSON
 
     enum Type
     {
-        string,
         number,
         boolean,
         null,
+        string,
         array,
         object,
     };
@@ -38,28 +38,28 @@ namespace JSON
     class Value
     {
     private:
-        using String = std::string;
         using Number = double;
         using Boolean = bool;
         using Null = std::nullptr_t;
+        using String = std::string;
         using Array = std::vector<Value>;
         using Object = std::map<std::string, Value>;
         Type type = Type::null;
         // init data
-        String data_string;
-        Array data_array;
-        Object data_object;
         Number data_number = 0;
         Boolean data_boolean = false;
         Null data_null = nullptr;
+        String data_string;
+        Array data_array;
+        Object data_object;
 
     public:
         explicit Value(){};
-        explicit Value(const char *_string) { setString(_string); };
-        explicit Value(String &&_string) { setString(std::move(_string)); };
         explicit Value(Number &&_number) { setNumber(std::move(_number)); };
         explicit Value(Boolean &&_boolean) { setBoolean(std::move(_boolean)); };
         explicit Value(Null &&_null) { setNull(std::move(_null)); };
+        explicit Value(const char *_string) { setString(_string); };
+        explicit Value(String &&_string) { setString(std::move(_string)); };
         explicit Value(Array &&_array) { setArray(std::move(_array)); };
         explicit Value(Object &&_object) { setObject(std::move(_object)); };
 
@@ -102,16 +102,6 @@ namespace JSON
         }
 
         // setters
-        inline void setString(const char *_string) noexcept
-        {
-            data_string = String(_string);
-            type = Type::string;
-        }
-        inline void setString(String &&_string) noexcept
-        {
-            data_string = _string;
-            type = Type::string;
-        }
         inline void setNumber(Number &&_number) noexcept
         {
             data_number = _number;
@@ -126,6 +116,16 @@ namespace JSON
         {
             data_null = _null;
             type = Type::null;
+        }
+        inline void setString(const char *_string) noexcept
+        {
+            data_string = String(_string);
+            type = Type::string;
+        }
+        inline void setString(String &&_string) noexcept
+        {
+            data_string = _string;
+            type = Type::string;
         }
         inline void setArray(Array &&_array) noexcept
         {
