@@ -1,7 +1,7 @@
 # C++ 实现 JSON 编码与解码
 
 递归实现，仅作练习。  
-尚未完全实现 [JSON 规范](https://www.json.org/json-zh.html)。（暂不支持 Unicode）
+可能未完全遵守 [JSON 规范](https://www.json.org/json-zh.html)。
 
 支持以下数据类型的映射
 
@@ -18,14 +18,14 @@ namespace JSON {
 
     class Value {
         public:
-        explicit Value(){};
-        explicit Value(Number &&_number);
-        explicit Value(Boolean &&_boolean);
-        explicit Value(Null &&_null);
-        explicit Value(const char *_string);
-        explicit Value(String &&_string);
-        explicit Value(Array &&_array);
-        explicit Value(Object &&_object);
+        explicit Value() noexcept;
+        explicit Value(Number &&_number) noexcept;
+        explicit Value(Boolean &&_boolean) noexcept;
+        explicit Value(Null &&_null) noexcept;
+        explicit Value(const char *_string) noexcept;
+        explicit Value(String &&_string) noexcept;
+        explicit Value(Array &&_array) noexcept;
+        explicit Value(Object &&_object) noexcept;
         // getters
         inline Number getNumber() const;
         inline Boolean getBoolean() const;
@@ -61,7 +61,13 @@ JSON::Value value = JSON::Value({
     {"key", JSON::Value("value")},
     {"abc", JSON::Value(12.3)}
 });
-JSON::Value value = JSON::Value({JSON::Value(true), JSON::Value("abc"), JSON::Value(JSON::Array{JSON::Value(12.3)})});
+JSON::Value value = JSON::Value(
+    {
+        JSON::Value(true),
+        JSON::Value("abc"),
+        JSON::Value(JSON::Array{JSON::Value(12.3)})
+    }
+);
 
 // 获取 JSON::Value 对象中的数据类型
 cout << value.getTypeString();

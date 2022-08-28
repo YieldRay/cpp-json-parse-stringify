@@ -20,7 +20,7 @@ namespace JSON
     }
     Value parseValue(const std::string &str, size_t &i)
     {
-        if (i >= str.length())
+        if (i > str.length())
             throw SyntaxError("Unexpected end of JSON input");
         Value value;
         skipBlank(str, i);
@@ -80,13 +80,24 @@ namespace JSON
                     result += "\t";
                     break;
                 case 'u':
-                    // TODO
-                    throw SyntaxError("Unicode is unimplemented yet");
-
+                {
+                    i++; // skip 'u'
+                    String hexStr = str.substr(i, 4);
+                    if (hexStr.length() != 4)
+                        throw SyntaxError("Unexpected end of JSON input");
+                    for (auto ch : hexStr)
+                    {
+                        if (!isHexChar(ch))
+                            throw SyntaxError("Invalid Unicode escape sequence");
+                    }
+                    result += unicode_to_utf8(std::stoi(hexStr, 0, 16));
+                    i += 3; // skip 3 hex digits, the rest 1 degit skip below
+                    break;
+                }
                 default:
                     throw SyntaxError(joinToString("Unexpected token ", str[i], " in JSON at position ", i));
                 }
-                i++; // skip common '\'
+                i++; // skip common
             }
             else
             {

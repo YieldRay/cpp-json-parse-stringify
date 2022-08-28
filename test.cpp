@@ -3,8 +3,10 @@
 using namespace std;
 int main()
 {
+    // system("chcp 65001");
     try
     {
+        cout << JSON::parse("\"\\u4f60\\u597d\\uff0c\\u4e16\\u754c\\uff01\"").getString() << endl;
         cout << JSON::parse("-9.9E+9").getNumber() << endl;
         cout << JSON::parse("-9.9E-9").getNumber() << endl;
 
@@ -46,7 +48,12 @@ int main()
     }
     catch (JSON::SyntaxError e)
     {
-        cout << "Error: ";
+        cout << "SyntaxError: ";
+        cout << e.what();
+    }
+    catch (JSON::TypeError e)
+    {
+        cout << "TypeError: ";
         cout << e.what();
     }
     return 0;
