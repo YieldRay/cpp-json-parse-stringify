@@ -1,18 +1,21 @@
-#include "json.cpp"
+#include "./json.cpp"
 #include <iostream>
 using namespace std;
+
 int main()
 {
     // system("chcp 65001");
     try
     {
-        cout << JSON::parse("\"\\u4f60\\u597d\\uff0c\\u4e16\\u754c\\uff01\"").getString() << endl;
+        // to echo string below, ensure you are using correct encoding
+        cout << JSON::parse(R"JSON( "\\u4f60\\u597d\\uff0c\\u4e16\\u754c\\uff01" )JSON").getString() << endl;
+        cout << JSON::parse(R"JSON( "\a" )JSON").getString() << endl; // this is ok, but \n will cause error
+        cout << JSON::parse(R"JSON( "break\\nline" )JSON").getString() << endl;
+
         cout << JSON::parse("-9.9E+9").getNumber() << endl;
         cout << JSON::parse("-9.9E-9").getNumber() << endl;
 
-        JSON::Value arr = JSON::parse(R"JSON(
-            ["wow", {"abc":123}]
-        )JSON");
+        JSON::Value arr = JSON::parse(R"JSON(  ["wow", {"abc":123}]  )JSON");
         arr.getArray().push_back(JSON::Value(789.0));       // this has no effect to the real vector, it just push data to a copy
         cout << (arr.getArray()[0].getString()) << endl;    // wow
         cout << JSON::stringify(arr.getArray()[0]) << endl; // "wow"
